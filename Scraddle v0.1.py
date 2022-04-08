@@ -5,8 +5,11 @@ from random import randint
 import numpy
 import pandas
 
-corpus = pandas.read_csv(r'C:/Users/Adam/Documents/R/My Projects/wordle2.csv')
+corpus = pandas.read_csv(r'C:/Users/Adam/Documents/Python Scripts/Scraddle Project/wordle2.csv')
 corpus = corpus['x']
+
+# initialize word list
+word_list = corpus
   
 # initial word length
 word_length = 5
@@ -14,63 +17,24 @@ word_length = 5
 # initialize secret word as empty
 secret_word = 'dummy'
 
-# Create object
+# an empty list to hold and track user guesses
+guess_history = numpy.empty(0, dtype = str)
+
+# create tkinter object
 root = Tk()
   
-# Adjust size
+# adjust window size
 root.geometry( "450x350" )
 
+# begin layout
 lbl_start = Label(text = "Word length:")
 lbl_start.grid(row = 0, column = 0)
 
-guess_list = numpy.empty(0, dtype = str)
-  
-def start():
+# datatype of menu text
+clicked = IntVar()
+clicked.set( 5 )
 
-    global corpus
-    global word_list
-    global secret_word
-
-    word_list = corpus.loc[corpus.str.len() == clicked.get()]
-    secret_word = ' ' # temporary; assign during first eval_guess
-
-    # change button args
-    btn_start['state'] = 'disabled'
-    btn_start['bg'] = "gray"
-    btn_reset['state'] = 'normal'
-    btn_reset['bg'] = "red"
-    drop['state'] = 'disabled'
-    btn_submit['state'] = 'normal'
-    btn_submit['bg'] = "green"
-    enter_guess['state'] = 'normal'
-
-def reset():
-
-    global guess_list
-
-    guess_list = numpy.empty(0, dtype = str) 
-
-    # change button args
-    btn_start['state'] = 'normal'
-    btn_start['bg'] = "green"
-    btn_reset['state'] = 'disabled'
-    btn_reset['bg'] = "gray"
-    drop['state'] = 'normal'
-    btn_submit['state'] = 'disabled'
-    btn_submit['bg'] = "gray"
-    enter_guess.delete(0,END)
-    enter_guess['state'] = 'disabled'
-    guess1['text'] = ' '
-    guess2['text'] = ' '
-    guess3['text'] = ' '
-    guess4['text'] = ' '
-    guess5['text'] = ' '
-    guess6['text'] = ' '
-    unused1['text'] = "QWERT YUIOP"
-    unused2['text'] = "ASDFG HJKL"
-    unused3['text'] = "ZXCV BNM"
-  
-# Dropdown menu options
+# create dropdown menu options
 options = [
     2,
     3,
@@ -87,26 +51,37 @@ options = [
     14,
     15
 ]
-
-
-# not used but would eventually like to generate the 'options' dropdown menu dynamically instead of hardcode
-min_length = int(min(corpus.str.len()))
-max_length = int(max(corpus.str.len()))
   
-# datatype of menu text
-clicked = IntVar()
-  
-# initial menu text
-clicked.set( 5 )
-  
-# Create Dropdown menu
+# create Dropdown menu
 drop = OptionMenu( root , clicked , *options )
 drop.grid(row = 0, column = 1)
 
 label_spacer1 = Label( root , text = " " )
 label_spacer1.grid(row = 0, column = 2)
   
-# Create button, it will change label text
+def start():
+
+    global corpus
+    global word_list
+    global secret_word
+
+    # filter corpus to include words of a certain letter length
+    word_list = corpus.loc[corpus.str.len() == clicked.get()]
+    word_list = word_list.reset_index()['x']
+
+    secret_word = word_list[randint(0, len(word_list))]
+
+    # change button args
+    btn_start['state'] = 'disabled'
+    btn_start['bg'] = "gray"
+    btn_reset['state'] = 'normal'
+    btn_reset['bg'] = "red"
+    drop['state'] = 'disabled'
+    btn_submit['state'] = 'normal'
+    btn_submit['bg'] = "green"
+    enter_guess['state'] = 'normal'
+
+# create start button defaults and map to start function
 btn_start = Button( root , text = "Start Game", fg = "white", bg = "green", command = start, state = 'normal' )
 btn_start.grid(row = 0, column = 3)
 
@@ -142,30 +117,27 @@ enter_guess.grid(row = 10, column = 1)
 
 def eval_letters(guess):
 
-    tmp = ' '
+    result = ' '
     global secret_word
 
     for i in range(len(guess)):
         if guess[i] == secret_word[i] :
-            tmp = tmp + " " + guess[i].capitalize()
+            result = result + " " + guess[i].capitalize()
             next
         elif guess[i] in secret_word:
-            tmp = tmp + " " + '*'
+            result = result + " " + '*'
             next
         else:
-            tmp = tmp + " " + '_'
+            result = result + " " + '_'
 
-    guess = guess + tmp
+    guess = guess + result
     return(guess)
 
 def eval_guess():
 
-    global guess_list
+    global guess_history
     global secret_word
     global enter_guess
-
-    if secret_word == ' ' :
-        secret_word = word_list[randint(0, len(word_list))]
 
     wd = enter_guess.get()
 
@@ -175,30 +147,30 @@ def eval_guess():
         messagebox.showerror('Invalid Guess', 'Remove spaces and characters.')
     elif len(word_list.loc[word_list == wd.lower()])==0:
         messagebox.showerror('Invalid Guess', wd.capitalize() + ' is not in the word list.')
-    elif len(guess_list[guess_list == wd.lower()])==1:
+    elif len(guess_history[guess_history == wd.lower()])==1:
         messagebox.showerror('Invalid Guess', wd.capitalize() + ' was already guessed.')
     elif len(word_list.loc[word_list == wd.lower()]) == 1:
 
-        guess_list = numpy.append(guess_list, wd.lower())
+        guess_history = numpy.append(guess_history, wd.lower())
         enter_guess.delete(0,END)
 
         # update guess texts
-        if len(guess_list) == 1:
+        if len(guess_history) == 1:
             guess1['text'] = eval_letters(wd.lower())
     
-        if len(guess_list) == 2:
+        if len(guess_history) == 2:
             guess2['text'] = eval_letters(wd.lower())
 
-        if len(guess_list) == 3:
+        if len(guess_history) == 3:
             guess3['text'] = eval_letters(wd.lower())
 
-        if len(guess_list) == 4:
+        if len(guess_history) == 4:
             guess4['text'] = eval_letters(wd.lower())
 
-        if len(guess_list) == 5:
+        if len(guess_history) == 5:
             guess5['text'] = eval_letters(wd.lower())
 
-        if len(guess_list) == 6:
+        if len(guess_history) == 6:
             guess6['text'] = eval_letters(wd.lower())
 
         # update letters remaining
@@ -212,7 +184,7 @@ def eval_guess():
             btn_submit['bg'] = "gray"
             enter_guess['state'] = 'disabled'
 
-        elif len(guess_list) == 6:
+        elif len(guess_history) == 6:
             messagebox.showerror(title = 'You lost!', message = secret_word.capitalize() + ' was the secret word.', icon = 'error')
 
             btn_submit['state'] = 'disabled'
@@ -227,6 +199,32 @@ btn_submit.grid(row = 10, column = 3)
 
 label_spacer4 = Label( root , text = " " )
 label_spacer4.grid(row = 10, column = 4)
+
+def reset():
+
+    global guess_history
+
+    guess_history = numpy.empty(0, dtype = str) 
+
+    # change button args
+    btn_start['state'] = 'normal'
+    btn_start['bg'] = "green"
+    btn_reset['state'] = 'disabled'
+    btn_reset['bg'] = "gray"
+    drop['state'] = 'normal'
+    btn_submit['state'] = 'disabled'
+    btn_submit['bg'] = "gray"
+    enter_guess.delete(0,END)
+    enter_guess['state'] = 'disabled'
+    guess1['text'] = ' '
+    guess2['text'] = ' '
+    guess3['text'] = ' '
+    guess4['text'] = ' '
+    guess5['text'] = ' '
+    guess6['text'] = ' '
+    unused1['text'] = "QWERT YUIOP"
+    unused2['text'] = "ASDFG HJKL"
+    unused3['text'] = "ZXCV BNM"
 
 btn_reset = Button( root, text = "Reset", fg = "white", bg = "gray", command = reset, state = 'disabled')
 btn_reset.grid(row = 10, column = 5)
