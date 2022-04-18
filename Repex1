@@ -1,0 +1,53 @@
+from tkinter import *
+from tkinter import ttk
+
+
+class Container1(ttk.Frame):
+
+    def __init__(self, master = None):
+        super().__init__(master)
+
+        # define two frame classes, each with one button
+        Button1(self).grid(row = 0, column = 0)
+        Button2(self).grid(row = 1, column = 0)
+
+
+class Button1(ttk.Frame):
+    
+    def __init__(self, master = None):
+        super().__init__(master)
+ 
+        def color_change1():
+            if self.btn1['bg'] == "red":
+                self.btn1['bg'] = "green"
+                Button2().btn2.config(bg = "red") # uses .config method to update attributes in Button 2()
+            else:
+                self.btn1['bg'] = "red"
+                Button2().btn2.config(bg = "green") # uses .config method to update button attributes in Button2()
+        
+        self.btn1 = Button(self, text = "Button 1", bg = "green", fg = "white", state = "normal", command = color_change1)
+        self.btn1.grid(row = 0, column = 0)
+
+
+class Button2(ttk.Frame):
+    
+    def __init__(self, master = None):
+        super().__init__(master)
+        
+        def color_change2():
+            if self.btn2['bg'] == "red":
+                self.btn2['bg'] = "green"
+                Button1().btn1['bg'] = "red" # uses [''] method to update button attributes in Button1()
+            else:
+                self.btn2['bg'] = "red"
+                Button1().btn1['bg'] = "green" # uses [''] method to update button attributes in Button1() 
+        
+        self.btn2 = Button(self, text = "Button 2", bg = "red", fg = "white", state = "normal", command = color_change2)
+        self.btn2.grid(row = 0, column = 0)
+
+root = Tk()
+
+app = Container1(root)
+app.pack()
+
+root.mainloop()
